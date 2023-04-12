@@ -1,149 +1,146 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.locks.ReentrantLock;
+//Libreria para manejo de bloqueos y sincronizacion utilizando hilos en java
+import java.util.concurrent.locks.*;
 
 public class TraderImpl implements Trader {
 
-   private Grain specialityGrain;
-   private Order stock;
-   private static final int maxWaitTime = 50;
-   private final ReentrantLock lock = new ReentrantLock(true);
-   private final ReentrantLock stockLock = new ReentrantLock(true);
+   //Instanciamos los objetos Grain y Order para el tipo de grano y Existencias
+   private Grain grainSpec;
+   private Order orderStock;
+   //Tiempo maximo de espera
+   private final int maxTime = 50;
+   //Controlar que los hilos intenten acceder al mismo recurso al mismo tiempo
+   private final ReentrantLock rLock = new ReentrantLock(true);
+   private final ReentrantLock lockInStock = new ReentrantLock(true);
 
+   //Constructor para el iniciarlizar las nuevas intancias
     public TraderImpl(Grain grain) {
-      this.specialityGrain = grain;
-      stock = new Order();
+      this.grainSpec = grain;
+      orderStock = new Order();
     }
 
+    //Metodo para obtener la cantidad disponible
     @Override
     public Order getAmountOnHand() {
       getAmountOnHand_String();
-      return stock;
+      return orderStock;
     }
 
+    //Metodo para obtener la cantidad solicitada
     public void get(Order order) throws InterruptedException {
-         //printEverybodyStock();
-         while (lock.isLocked()) {
+         // Controlamos que mientras este bloqueado espere
+         while (rLock.isLocked()) {   
          Thread.sleep(100);
          }
-         lock.lock();
+         rLock.lock();
          try {
             System.out.println("Order ");
-            int timesWaiting = 0;
-            while (stock.get(this.specialityGrain)
-                        < order.get(this.specialityGrain)) {   
-                  //System.out.print("Order " + order.get(this.specialityGrain)
-                  // + " of " + specialityGrain.toString() + ": ");
-                  //System.out.println("Not enough speciality yet");
+            int waitTime = 0;
+            while (orderStock.get(this.grainSpec)
+                        < order.get(this.grainSpec)) {   
                   Thread.sleep(50);
-                  if (timesWaiting++ > maxWaitTime) {
+                  //So el tiempo de espera sobrepasa al maximo interumpe al hilo y se une al hilo actual
+                  if (waitTime++ > maxTime) {
                      Thread.currentThread().interrupt();
                      Thread.currentThread().join();
-                     //System.out.println("maxWaitTime on GET1");
                      return;
                   }  
             }
-            //System.out.println("Successfully deliever "
-            // + order.get(specialityGrain)
-            // + " of speciality "
-            // + this.specialityGrain.toString());
-            //TODO
-            //changeStock(specialityGrain, -order.get(specialityGrain));
-            ArrayList<Grain> grains = new ArrayList(Arrays.asList(Grain.values()));
+            //Se crea una lista de los granos disponibles
+            ArrayList<Grain> gainList = new ArrayList(Arrays.asList(Grain.values()));
             
-            grains.remove(this.specialityGrain);
-            for (Grain grain : grains) {
-            
-                  timesWaiting = 0;
-                  int amt = order.get(grain) - stock.get(grain);
+            //Se remueve el grano especificado
+            gainList.remove(this.grainSpec);
+            for (Grain grain : gainList) {
+                  waitTime = 0;
+                  //Se almacena la cantidad de granos que no estan disponibles
+                  int amt = order.get(grain) - orderStock.get(grain);
                   boolean bool = true;
-                  while (stock.get(grain) < order.get(grain) && bool) {
-                        if (stock.get(specialityGrain) >= amt) {
-                              /*System.out.println("Trying to swap "
-                                    + specialityGrain.toString()
-                                    + " for " + grain.toString());*/
-                              P3.specialist(grain).swap(specialityGrain, amt);
+                  while (orderStock.get(grain) < order.get(grain) && bool) {
+                        //si el stock disponible del grano especificado es mayor o igual al requerido llamamos al metodo P3 para el intercambio
+                        if (orderStock.get(grainSpec) >= amt) {
+                              P3.specialist(grain).swap(grainSpec, amt);
+                              //Actualizamos Stock del grano actual
                               changeStock(grain, amt);
-                              changeStock(specialityGrain, -amt);
-                              //TODO
-                              //changeStock(grain, -order.get(grain));
+                              //Actualizamos el Stock del grano solicitado
+                              changeStock(grainSpec, -amt);
                               bool = false;
+                        //Controlamos el tiempo de espera y evitamos tiempos infinitos de espera
                         } else {
-                               Thread.sleep(100);
-                               if (timesWaiting++ > maxWaitTime) {
+                               Thread.sleep(100);     
+                               //Si el tiempo de espera supera al tiempo maximo el hilo se interrumpe y se une al hilo actual
+                               if (waitTime++ > maxTime) {
                                      Thread.currentThread().interrupt();
                                      Thread.currentThread().join();
-                                     //System.out.println("maxWaitTime on GET2");
                                      return;
                                }
                         }
                   }
             }
-               // TODO
-               // quedan productos netos porque se entregan al cervecero
-               // apenas esten disponibles. Esto causa un problema al
-               // final porque el sistema no registra que se ha entregado
-               // si la entrega no es completa.
-               // por ello se agregan estos productos entregados a
-               // medias, a las bodegas del trader.
-               grains.add(specialityGrain);
-               for (Grain grain : grains) {
+               //Se agrega el grano a la lista de granos disponibles
+               gainList.add(grainSpec);
+               for (Grain grain : gainList) {
+                  //De actualiza la cantidad de existencias de los granos
                      changeStock(grain, -order.get(grain));
                }
+               //Se desbloquea el recurso
           } finally {
-               lock.unlock();
+               rLock.unlock();
           }
                 
     }
 
+
+    //Metodo para realizar el intercambio del grano
     @Override
     public  synchronized void swap(Grain what, int amt) throws InterruptedException {
-            //printEverybodyStock();
-            // si tengo menos granos de especialidad do los que me piden
-            // cambiar, espero al supplier. Espero al supplier un maximo
-            // de tiempo.
-            int maxTimesWaiting = 0;
-            while (stock.get(this.specialityGrain) < amt) {
+            int maxWaitTime = 0;
+            //Se espera a que exista suficiente cantidad de granos
+            while (orderStock.get(this.grainSpec) < amt) {
                Thread.sleep(50);
-               if (maxTimesWaiting++ > maxWaitTime) {
+               //Si espera demasiado interrumpe al hilo y se une al hilo actual
+               if (maxWaitTime++ > maxTime) {
                    Thread.currentThread().interrupt();
                    Thread.currentThread().join();
-                   //System.out.println("maxWaitTime on SWAP");
                    return;
                }
             }
-            changeStock(this.specialityGrain, -amt);
+            //Se actualiza la cantidad de granos actual
+            changeStock(this.grainSpec, -amt);
+            //Se aumenta la cantidad de granos intercambiados
             changeStock(what, amt);
-            //System.out.println("Succesfull Swap Transaction");
     }
     
+    //Motificar el stock del grano
     @Override
     public void deliver(int amt) throws InterruptedException {
-            changeStock(this.specialityGrain, amt);
+            changeStock(this.grainSpec, amt);
     }
     
+    //Metodo para impresion de la cantidad actual de existencias de granos
     private void getAmountOnHand_String() {
          String string;
          string = "From trader specialized in "
-               + specialityGrain.toString()
+               + grainSpec.toString()
                + ", stock:\n"
-               + "Barley: " + stock.get(Grain.BARLEY) + ", "
-               + "Corn: " + stock.get(Grain.CORN) + ", "
-               + "Rice: " + stock.get(Grain.RICE) + ", "
-               + "Wheat: " + stock.get(Grain.WHEAT);
+               + "Barley: " + orderStock.get(Grain.BARLEY) + ", "
+               + "Corn: " + orderStock.get(Grain.CORN) + ", "
+               + "Rice: " + orderStock.get(Grain.RICE) + ", "
+               + "Wheat: " + orderStock.get(Grain.WHEAT);
          System.out.println(string);
     }
-    
+
+    //Metodo para intercambiar un grano espeficico considerando una cantidad que se aumenta o se resta. 
     private void changeStock(Grain grain, int amt) throws InterruptedException {
-         stockLock.lock();
+       //Se bloquea para asegurar que otro hilo no realice modificaciones 
+         lockInStock.lock();
          try {
-             /*System.out.println("changeStock: "
-             + grain.toString() + ", amt: "
-             + amt);*/
-             stock.change(grain, amt);
-         } finally {
-             //printEverybodyStock();
-             stockLock.unlock();
+             orderStock.change(grain, amt);
+         } 
+         //Al realizar la modificacion al inventario se desbloquea 
+         finally {
+             lockInStock.unlock();
          }
     }
    
