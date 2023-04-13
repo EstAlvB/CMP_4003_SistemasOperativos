@@ -25,4 +25,6 @@ Universidad San Francisco de Quito
     Retroalimentación sobre las mejores posibles al proyecto
 
 Comentarios sobre el proyecto:
-La sincronización de hilos para evitar la hambruna de procesos siempre es un desafío en cualquier sistema. Por ello, este proyecto fue de cierta forma complejo; pero al usar los métodos de sincronización aprendidos en clase, hicimos que, en la medida de lo posible, la mayoría de los procesos puedan acceder a los recursos y cumplir su objetivo.
+La sincronización de hilos para evitar la hambruna de procesos siempre es un desafío en cualquier sistema. Por ello, este proyecto fue de cierta
+forma complejo; pero al usar los métodos de sincronización aprendidos en clase, hicimos que, en la medida de lo posible, la mayoría de los procesos
+puedan acceder a los recursos y cumplir su objetivo.
