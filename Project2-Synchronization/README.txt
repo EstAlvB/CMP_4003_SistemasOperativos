@@ -16,7 +16,6 @@ Universidad San Francisco de Quito
     Revison constante a los avances de los compañeros de grupo
     Retroalimentación sobre las mejores posibles al proyecto
 
-
 - Gabriel Sebastian Lara Hidalgo (00215784) : 
     Encargado de:
     Implementación parcial del método get() para obtener la cantidad solicitada
