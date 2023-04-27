@@ -6,9 +6,10 @@ Universidad San Francisco de Quito
     Creación del repositorio en GitHub para el trabajo de grupo para el proyecto
     Encargado de:
 
-	Implementación de arreglos numpy para los datos de recursos, tanto en los procesos como en 	aquellos disponibles.
+	Implementación de arreglos numpy para los datos de recursos, tanto en los procesos como en aquellos disponibles.
 
-	Implementación de la función allocateResources() y releaseResources() para los pedidos de 	recursos, y verificar condición de estados seguros o no.
+	Implementación de la función allocateResources() y releaseResources() para los pedidos de recursos, y verificar 
+	condición de estados seguros o no.
 
     	Revisión constante a los avances de los compañeros de grupo
 
@@ -29,7 +30,8 @@ Universidad San Francisco de Quito
 - Gabriel Sebastian Lara Hidalgo (00215784) : 
     Encargado de:
 
-	Implementación de las funciones de calculateNeed() y isSafe(), para verificar la necesidad de 	recursos y si hay estado seguro o no.
+	Implementación de las funciones de calculateNeed() y isSafe(), para verificar la necesidad de recursos y si 
+	hay estado seguro o no.
 
     	Revisión constante a los avances de los compañeros de grupo
 
