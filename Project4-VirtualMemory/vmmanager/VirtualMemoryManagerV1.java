@@ -49,7 +49,7 @@ public class VirtualMemoryManagerV1 {
             frame = pageTable.lookup(page);
         }
         int physicalAddr = translateVirtualAddrToPhysical(address, frame);
-        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, pageSize)
+        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(pageSize))
                             + " <-- " + String.valueOf(value));
         memory.writeByte(physicalAddr, value);
         bytesTransferred++;
@@ -68,7 +68,7 @@ public class VirtualMemoryManagerV1 {
         }
         int physicalAddr = translateVirtualAddrToPhysical(address, frame);
         byte memoryByte = memory.readByte(physicalAddr);
-        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, pageSize)
+        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(pageSize))
                            + " --> " + String.valueOf(memoryByte));
         return memoryByte;
     }
@@ -145,76 +145,5 @@ public class VirtualMemoryManagerV1 {
     // Method to retrieve the number of bytes transferred between RAM and disk
     public int getTransferedByteCount() {
         return bytesTransferred;
-    }
-}
-
-class PageTable{
-    private HashMap<Integer, Integer> table;
-
-    public PageTable(){
-        this.table = new HashMap<>();
-    }
-
-    Integer lookup(int page){
-        if(!table.containsKey(page)){
-            table.put(page, null);
-        }
-        return table.get(page);
-    }
-
-    public void update(int page, int frame){
-        table.put(page, frame);
-    }
-
-    public Integer getPageByFrame(int frame){
-        Integer key = null;
-        for (Map.Entry<Integer, Integer> entry : table.entrySet()) {
-            if (entry.getValue().equals(frame)) {
-                key = entry.getKey();
-                break;
-            }
-        }
-        return key;
-    }
-}
-
-class MemoryState {
-    private HashMap<Integer, Boolean> state;
-    private final int numOfFrames;
-
-    public MemoryState(int numOfFrames){
-        this.numOfFrames = numOfFrames;
-        state = new HashMap<>(){{
-            for (int i = 0; i < numOfFrames; i++) {
-                put(i, true);
-            }
-        }};
-    }
-
-    public HashMap<Integer, Boolean> getMemoryState(){
-        return state;
-    }
-
-    public boolean getLoadedState(int frameNum) {
-        return state.get(frameNum);
-    }
-
-    public void setLoadedState(int frameNum, boolean loaded) {
-        state.put(frameNum, loaded);
-    }
-
-    public void clearState(int frameNum) {
-        state.put(frameNum, true);
-    }
-
-    public int getFreeFrame(){
-        Integer freeFrame = 0;
-        for (Map.Entry<Integer, Boolean> entry : state.entrySet()) {
-            if (entry.getValue()) {
-                freeFrame = entry.getKey();
-                break;
-            }
-        }
-        return freeFrame;
     }
 }
