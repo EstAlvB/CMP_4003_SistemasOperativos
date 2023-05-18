@@ -4,7 +4,6 @@ import vmsimulation.BackingStore;
 import vmsimulation.BitwiseToolbox;
 import vmsimulation.MainMemory;
 import vmsimulation.MemoryException;
-
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -40,7 +39,7 @@ public class VirtualMemoryManagerV1 {
 
     // Method to write a byte to memory given a virtual address
     public void writeByte(Integer fourByteBinaryString, Byte value) throws MemoryException {
-        int address = BitwiseToolbox.extractBits(fourByteBinaryString, 0, pageSize);
+        int address = BitwiseToolbox.extractBits(fourByteBinaryString, 0, log2(disk.size()));
         int page = address/pageSize;
         Integer frame = pageTable.lookup(page);
         if(frame==null) {
@@ -49,7 +48,7 @@ public class VirtualMemoryManagerV1 {
             frame = pageTable.lookup(page);
         }
         int physicalAddr = translateVirtualAddrToPhysical(address, frame);
-        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(pageSize))
+        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(memory.size()-1))
                             + " <-- " + String.valueOf(value));
         memory.writeByte(physicalAddr, value);
         bytesTransferred++;
@@ -58,7 +57,7 @@ public class VirtualMemoryManagerV1 {
 
     // Method to read a byte to memory given a virtual address
     public Byte readByte(Integer fourByteBinaryString) throws MemoryException {
-        int address = BitwiseToolbox.extractBits(fourByteBinaryString, 0, pageSize);
+        int address = BitwiseToolbox.extractBits(fourByteBinaryString, 0, log2(disk.size()));
         int page = address/pageSize;
         Integer frame = pageTable.lookup(page);
         if(frame==null) {
@@ -68,8 +67,9 @@ public class VirtualMemoryManagerV1 {
         }
         int physicalAddr = translateVirtualAddrToPhysical(address, frame);
         byte memoryByte = memory.readByte(physicalAddr);
-        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(pageSize))
+        System.out.println("RAM: @" + BitwiseToolbox.getBitString(physicalAddr, log2(memory.size()-1))
                            + " --> " + String.valueOf(memoryByte));
+        bytesTransferred--;
         return memoryByte;
     }
 
@@ -85,7 +85,6 @@ public class VirtualMemoryManagerV1 {
         memoryState.setLoadedState(freeFrame, false);
         pageTable.update(page, freeFrame);
         byte[] pageBytes = disk.readPage(page); // read page data
-        disk.writePage(page, new byte[pageSize]); // delete page data on disk
 
         for (int i = 0; i < pageBytes.length; i++) {
             memory.writeByte(address+i, pageBytes[i]); // write bytes on memory
@@ -100,7 +99,7 @@ public class VirtualMemoryManagerV1 {
     public void printMemoryContent() throws MemoryException {
         for (int i = 0; i < memory.size(); i++){
             byte b = memory.readByte(i);
-            String bits = BitwiseToolbox.getBitString(i, pageSize);
+            String bits = BitwiseToolbox.getBitString(i, log2(memory.size()-1));
             System.out.println(bits + ": " + String.valueOf(b));
         }
     }

@@ -5,9 +5,11 @@ import java.util.Map;
 
 class PageTable{
     private HashMap<Integer, Integer> table;
+    private HashMap<Integer, Integer> dirtyBits;
 
     public PageTable(){
         this.table = new HashMap<>();
+        this.dirtyBits = new HashMap<>();
     }
 
     public Integer lookup(Integer page){
@@ -15,6 +17,14 @@ class PageTable{
             table.put(page, null);
         }
         return table.get(page);
+    }
+
+    public void setDirtyBitForPage(Integer page, Integer bit){
+        dirtyBits.put(page, bit);
+    }
+
+    public Integer getDirtyBitFromPage(Integer page){
+        return dirtyBits.get(page);
     }
 
     public void update(Integer page, Integer frame){
